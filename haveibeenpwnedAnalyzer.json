@@ -1,0 +1,18 @@
+{
+    "name": "haveibeenpwnedAnalyzer",
+    "version": "1.0",
+    "author": "VACE Security",
+    "url": "https://github.com/vace-sec/haveibeenpwnedAnalyzer",
+    "license": "MIT",
+    "description": "Checks an email address on HaveIBeenPwned",
+    "dataTypeList": ["mail"],
+    "baseConfig": "haveibeenpwnedAnalyzer",
+    "command": "haveibeenpwnedAnalyzer/haveibeenpwnedAnalyzer.py",
+    "config": {
+        "max_tlp": 3,
+        "max_pap": 3,
+        "check_tlp": true,
+        "check_pap": true
+    },
+    "configurationItems": []
+}
