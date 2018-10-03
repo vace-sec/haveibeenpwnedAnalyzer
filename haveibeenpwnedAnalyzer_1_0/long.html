@@ -1,0 +1,47 @@
+<!-- Success -->
+<div class="panel panel-info" ng-if="success">
+    <div class="panel-heading">
+        HaveIBeenPwned Report
+    </div>
+    <div class="panel-body">
+        <table class="table table-hover">
+            <tr>
+                <th>Breach name</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Domain</th>
+                <th>Data Classes</th>
+                <th>Is Verified</th>
+            </tr>
+            <tr ng-repeat="breach in content.breaches">
+                <td><strong>{{breach.Name}}</strong></td>
+                <td>{{breach.BreachDate}}</td>
+                <td ng-bind-html="breach.Description"></td>
+                <td>{{breach.Domain}}</td>
+                <td>
+                    <ul>
+                        <li ng-repeat="dataclass in breach.DataClasses">{{dataclass}}</li>
+                    </ul>
+                </td>
+                <td>
+                    <div style="text-align:center">
+                        <i ng-class="{'text-danger fa fa-times': breach.IsVerified == false, 'text-success fa fa-check-circle': breach.IsVerified == true}"></i>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- General error  -->
+<div class="panel panel-danger" ng-if="!success">
+    <div class="panel-heading">
+        <strong>{{(artifact.data || artifact.attachment.name) | fang}}</strong>
+    </div>
+    <div class="panel-body">
+        <dl class="dl-horizontal" ng-if="content.errorMessage">
+            <dt><i class="fa fa-warning"></i> HaveIBeenPwned Analyzer: </dt>
+            <dd class="wrap">{{content.errorMessage}}</dd>
+        </dl>
+    </div>
+</div>

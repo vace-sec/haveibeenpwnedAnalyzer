@@ -2,7 +2,40 @@
 # encoding: utf-8
 
 from cortexutils.analyzer import Analyzer
-from haveibeenpwnd import check_email, list_to_print_string
+import requests
+
+HEADERS = {'User-Agent': 'github.com/vace-sec/haveibeenpwnedAnalyzer v1.0', 'api-version': '2'}
+email_url = 'https://haveibeenpwned.com/api/v2/breachedaccount/{}'
+params = {'includeUnverified': 'true'}  # bug in the haveibeenpwned api, so does not work
+error_messages = {
+    400: "Bad request — the account does not comply with an acceptable format "
+         "(i.e. it's an empty string)",
+    403: "Forbidden — no user agent has been specified in the request",
+    429: "Too many requests — the rate limit has been exceeded",
+    526: "Cloudflare SSL Error - please try again later"
+}
+
+def list_to_print_string(l):
+    if len(l) == 1:
+        return l[0]
+    else:
+        return ", ".join(l[:-1]) + " and {}".format(l[-1])
+
+def check_email(email):
+    response = requests.get(email_url.format(email), headers=HEADERS)
+    http_status = response.status_code
+    if http_status == 200:
+        return {
+            'breaches': response.json()
+        }
+    elif http_status == 404:
+        return {'breaches': []}
+    else:
+        message = error_messages.get(http_status, "Unknown error: {}".format(http_status))
+        return {
+            'error': message,
+            'breaches': ''
+        }
 
 class haveibeenpwnedAnalyzer(Analyzer):
     """
@@ -29,12 +62,11 @@ class haveibeenpwnedAnalyzer(Analyzer):
             taxonomies.append(self.build_taxonomy(level, namespace, predicate, "No breaches found"))
         elif count <= 3:
             level = 'suspicous'
+            taxonomies.append(self.build_taxonomy(level, namespace, predicate, str(count) + " breache(s)"))
         else:
             level = 'malicous'
+            taxonomies.append(self.build_taxonomy(level, namespace, predicate, str(count) + " breaches"))
 
-        for breach in raw['breaches']:
-            value = "The <{}> breach ({}) exposed {}".format(breach['Name'], breach['BreachDate'], list_to_print_string(breach['DataClasses']))
-            taxonomies.append(self.build_taxonomy(level, namespace, predicate, value))
 
         return {'taxonomies': taxonomies}
 
