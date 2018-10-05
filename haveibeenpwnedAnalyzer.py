@@ -6,7 +6,7 @@ import requests
 
 HEADERS = {'User-Agent': 'github.com/vace-sec/haveibeenpwnedAnalyzer v1.0', 'api-version': '2'}
 email_url = 'https://haveibeenpwned.com/api/v2/breachedaccount/{}'
-params = {'includeUnverified': 'true'}  # bug in the haveibeenpwned api, so does not work
+params = {'includeUnverified': 'true'}
 error_messages = {
     400: "Bad request — the account does not comply with an acceptable format "
          "(i.e. it's an empty string)",
@@ -22,8 +22,11 @@ def list_to_print_string(l):
         return ", ".join(l[:-1]) + " and {}".format(l[-1])
 
 def check_email(email):
-    response = requests.get(email_url.format(email), headers=HEADERS)
+    response = requests.get(email_url.format(email), headers=HEADERS, params=params)
     http_status = response.status_code
+    if http_status == 403:
+        response = requests.get(email_url.format(email), headers=HEADERS)  # try again without includeUnverified
+        http_status = response.status_code
     if http_status == 200:
         return {
             'breaches': response.json()
@@ -60,11 +63,14 @@ class haveibeenpwnedAnalyzer(Analyzer):
         if count == 0:
             level = 'info'
             taxonomies.append(self.build_taxonomy(level, namespace, predicate, "No breaches found"))
+        elif count == 1:
+            level = 'suspicious'
+            taxonomies.append(self.build_taxonomy(level, namespace, predicate, "1 breache"))
         elif count <= 3:
-            level = 'suspicous'
-            taxonomies.append(self.build_taxonomy(level, namespace, predicate, str(count) + " breache(s)"))
+            level = 'suspicious'
+            taxonomies.append(self.build_taxonomy(level, namespace, predicate, str(count) + " breaches"))
         else:
-            level = 'malicous'
+            level = 'malicious'
             taxonomies.append(self.build_taxonomy(level, namespace, predicate, str(count) + " breaches"))
 
 
